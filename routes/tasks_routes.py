@@ -5,7 +5,7 @@ from database.model import User, Task
 from utils.functions import gerar_hash
 from database.database import get_session
 
-
+# testando email de commit
 router = APIRouter()
 
 class UserSignUp(BaseModel):
