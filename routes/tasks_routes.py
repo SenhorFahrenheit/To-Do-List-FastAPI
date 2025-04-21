@@ -4,7 +4,7 @@ from sqlmodel import Session
 from database.model import User, Task
 from utils.functions import gerar_hash
 from database.database import get_session
-
+# testando novamente
 router = APIRouter()
 
 class UserSignUp(BaseModel):
