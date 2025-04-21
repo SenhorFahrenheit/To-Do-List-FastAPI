@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from database.model import User, Task
 from utils.functions import gerar_hash, verificar_senha
+from utils.auth import criar_token
 from database.database import get_session
 from sqlmodel import select
 
@@ -47,5 +48,12 @@ def sign_up(user: UserSignUp, db: Session = Depends(get_session)):
 
 @router.post("/sign_in")
 def sign_in(user: UserSignIn, db: Session = Depends(get_session)):
-    return authenticate_user(db, user)
+    user_db = authenticate_user(db, user)
+    
+    if "error" in user_db:
+        return user_db
+
+    token = criar_token({"sub": user.username})
+    return {"message": "Login bem sucedido", "access_token": token, "token_type": "bearer"}
+
 
