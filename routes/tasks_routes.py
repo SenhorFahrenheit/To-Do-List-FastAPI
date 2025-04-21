@@ -5,7 +5,7 @@ from database.model import User, Task
 from utils.functions import gerar_hash, verificar_senha
 from utils.auth import criar_token
 from database.database import get_session
-from sqlmodel import select
+from sqlmodel import select, insert
 
 router = APIRouter()
 
@@ -17,6 +17,10 @@ class UserSignIn(BaseModel):
     username: str
     password: str
 
+class TaskModel(BaseModel):
+    title: str
+    description: str
+    id_user: int
 
 def create_user(db: Session, userBaseModel: UserSignUp):
     username = userBaseModel.username
@@ -42,6 +46,15 @@ def authenticate_user(db: Session, userBaseModel: UserSignIn):
             return {"error": "Username ou senha incorretos"}
     return {"error": "Username ou senha incorretos"}
 
+def create_task(db: Session, task: TaskModel):
+    
+    new_task = Task(title=task.title, description=task.description, id_user=task.id_user)
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+    
+    return {"message": "Tarefa criada com sucesso"}
+
 @router.post("/sign_up")
 def sign_up(user: UserSignUp, db: Session = Depends(get_session)):
     return create_user(db, user)
@@ -57,3 +70,6 @@ def sign_in(user: UserSignIn, db: Session = Depends(get_session)):
     return {"message": "Login bem sucedido", "access_token": token, "token_type": "bearer"}
 
 
+@router.post("/add_task")
+def add_task(task: TaskModel, db: Session = Depends(get_session)):
+    return create_task(db, task)
