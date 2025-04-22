@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-# Chave secreta — mantenha em segredo
 SECRET_KEY = "vFn3Kz!8j@Yq9$Lx%Nr4Ue#Wd^B1Cg&TzHs6Xp*Aq+Mk7RbVcJs2PfEo"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

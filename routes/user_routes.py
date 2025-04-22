@@ -33,7 +33,7 @@ def authenticate_user(db: Session, userBaseModel: UserSignIn):
     result = db.exec(statement).first()
 
     if result and verificar_senha(password, result.password):
-        return {"message": "Login bem-sucedido", "user": result.username}
+        return {"message": "Login bem-sucedido", "user": result.username, "user id": result.id}
     
     return {"error": "Username ou senha incorretos"}
 
@@ -47,6 +47,5 @@ def sign_in(user: UserSignIn, db: Session = Depends(get_session)):
     
     if "error" in user_db:
         return user_db
-
-    token = criar_token({"sub": user.username})
+    token = criar_token({"sub": str(user_db["user id"])})
     return {"message": "Login bem sucedido", "access_token": token, "token_type": "bearer"}

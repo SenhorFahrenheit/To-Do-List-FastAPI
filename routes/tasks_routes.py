@@ -12,6 +12,8 @@ class TaskModel(BaseModel):
     description: str
     id_user: int
 
+
+
 def create_task(db: Session, task: TaskModel):
     new_task = Task(
         title=task.title,
@@ -30,7 +32,16 @@ def add_task(
     db: Session = Depends(get_session),
     token_valid: str = Depends(verificar_token)
 ):
+    print(token_valid)
     if token_valid is None:
         raise HTTPException(status_code=401, detail="Token inválido ou ausente")
     
     return create_task(db, task)
+
+@router.get("/list_tasks")
+def list_tasks(
+
+    db: Session = Depends(get_session),
+    token_valid: str = Depends(verificar_token)
+):
+    pass
