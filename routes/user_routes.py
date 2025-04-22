@@ -1,0 +1,52 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlmodel import Session, select
+from database.model import User
+from utils.functions import gerar_hash, verificar_senha
+from utils.auth import criar_token
+from database.database import get_session
+
+router = APIRouter()
+
+class UserSignUp(BaseModel):
+    username: str
+    password: str
+
+class UserSignIn(BaseModel):
+    username: str
+    password: str
+
+def create_user(db: Session, userBaseModel: UserSignUp):
+    username = userBaseModel.username
+    password_hash = gerar_hash(userBaseModel.password)
+    user = User(username=username, password=password_hash)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def authenticate_user(db: Session, userBaseModel: UserSignIn):
+    username = userBaseModel.username
+    password = userBaseModel.password
+
+    statement = select(User).where(User.username == username)
+    result = db.exec(statement).first()
+
+    if result and verificar_senha(password, result.password):
+        return {"message": "Login bem-sucedido", "user": result.username}
+    
+    return {"error": "Username ou senha incorretos"}
+
+@router.post("/sign_up")
+def sign_up(user: UserSignUp, db: Session = Depends(get_session)):
+    return create_user(db, user)
+
+@router.post("/sign_in")
+def sign_in(user: UserSignIn, db: Session = Depends(get_session)):
+    user_db = authenticate_user(db, user)
+    
+    if "error" in user_db:
+        return user_db
+
+    token = criar_token({"sub": user.username})
+    return {"message": "Login bem sucedido", "access_token": token, "token_type": "bearer"}
