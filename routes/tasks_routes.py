@@ -34,6 +34,21 @@ def get_tasks(db: Session, token):
     # Mesmo sem tarefas, retorne lista vazia com status 200
     return JSONResponse(content=tasks, status_code=200)
 
+def remove_task(db: Session, token, task_id):
+    user_id = int(token["sub"])
+    statement = select(Task).where(Task.id_user == user_id, Task.id == task_id)
+    task = db.exec(statement).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarefa não encontrada ou não pertence ao usuário")
+
+    db.delete(task)
+    db.commit()
+
+    message = {"message": "Tarefa excluída com sucesso"}
+
+    return message
+
 @router.post("/add_task")
 def add_task(
     task: TaskModel,
@@ -55,3 +70,15 @@ def list_tasks(
         raise HTTPException(status_code=401, detail="Token inválido ou ausente")
     
     return get_tasks(db, token_valid)
+
+@router.delete("/tasks/{task_id}")
+def delete_tasks(
+    task_id: int,
+    db: Session = Depends(get_session),
+    token_valid: str = Depends(verificar_token)
+):
+    if token_valid is None:
+        raise HTTPException(status_code=401, detail="Token inválido ou ausente")     
+
+
+    return remove_task(db, token_valid, task_id)
