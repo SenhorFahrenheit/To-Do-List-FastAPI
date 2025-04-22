@@ -6,6 +6,8 @@ from utils.functions import gerar_hash, verificar_senha
 from utils.auth import criar_token
 from database.database import get_session
 from sqlmodel import select, insert
+from utils.auth import verificar_token
+from fastapi import HTTPException
 
 router = APIRouter()
 
@@ -47,7 +49,7 @@ def authenticate_user(db: Session, userBaseModel: UserSignIn):
     return {"error": "Username ou senha incorretos"}
 
 def create_task(db: Session, task: TaskModel):
-    
+
     new_task = Task(title=task.title, description=task.description, id_user=task.id_user)
     db.add(new_task)
     db.commit()
@@ -71,5 +73,8 @@ def sign_in(user: UserSignIn, db: Session = Depends(get_session)):
 
 
 @router.post("/add_task")
-def add_task(task: TaskModel, db: Session = Depends(get_session)):
+def add_task(task: TaskModel, db: Session = Depends(get_session), token_valid: str = Depends(verificar_token)):
+    if token_valid == None:
+        raise HTTPException(status_code=401, detail="Token inválido ou ausente")
+    
     return create_task(db, task)
