@@ -18,12 +18,19 @@ class UserSignIn(BaseModel):
 
 def create_user(db: Session, userBaseModel: UserSignUp):
     username = userBaseModel.username
+
+    statement = select(User).where(User.username == username)
+    result = db.exec(statement).first()
+
+    if result:
+        raise HTTPException(status_code=400, detail="Este username já está em uso")
+
     password_hash = gerar_hash(userBaseModel.password)
     user = User(username=username, password=password_hash)
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    return {"message": "Cadastro feito com sucesso", "Bem vindo: ": user}
 
 def authenticate_user(db: Session, userBaseModel: UserSignIn):
     username = userBaseModel.username
@@ -35,7 +42,8 @@ def authenticate_user(db: Session, userBaseModel: UserSignIn):
     if result and verificar_senha(password, result.password):
         return {"message": "Login bem-sucedido", "user": result.username, "user id": result.id}
     
-    return {"error": "Username ou senha incorretos"}
+    raise HTTPException(status_code=401, detail="Username ou senha incorretos")
+
 
 @router.post("/sign_up")
 def sign_up(user: UserSignUp, db: Session = Depends(get_session)):
