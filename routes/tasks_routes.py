@@ -14,17 +14,16 @@ router = APIRouter()
 class TaskModel(BaseModel):
     title: str
     description: str
-    id_user: int
 
 class TaskUpdateModel(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
 
-def create_task(db: Session, task: TaskModel):
+def create_task(db: Session, task: TaskModel, user_id: int):
     new_task = Task(
         title=task.title,
         description=task.description,
-        id_user=task.id_user
+        id_user=user_id
     )
     db.add(new_task)
     db.commit()
@@ -78,11 +77,11 @@ def add_task(
     db: Session = Depends(get_session),
     token_valid: str = Depends(verificar_token)
 ):
-    print(token_valid)
     if token_valid is None:
         raise HTTPException(status_code=401, detail="Token inválido ou ausente")
     
-    return create_task(db, task)
+    user_id = int(token_valid["sub"])
+    return create_task(db, task, user_id)
 
 @router.get("/list_tasks")
 def list_tasks(
